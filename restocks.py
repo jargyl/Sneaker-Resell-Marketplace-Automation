@@ -1,14 +1,15 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from dhooks import Webhook, Embed
+from notification import notify
+
+MODES = ['Marketprice', 'Lower by €1', 'Custom price']
 
 config = json.load(open('config.json'))
 
-EMAIL = config['email']
-PASSWORD = config['password']
-WEBHOOK = config['webhook']
-MODE = config['mode']
+EMAIL = config['restocks_email']
+PASSWORD = config['restocks_password']
+MODE = config['restocks_mode']
 CUSTOM_PRICE = config['custom_price']
 
 # Create a session that gets reused
@@ -70,8 +71,8 @@ def change_price(option):
 
         # Create a dict that maps the options to their corresponding values
         option_values = {
-            1: price - 1,
-            2: get_lowest_price(base_id, size_id, product_id),
+            1: get_lowest_price(base_id, size_id, product_id),
+            2: price - 1,
             3: CUSTOM_PRICE
         }
 
@@ -88,8 +89,12 @@ def change_price(option):
             }
         r = session.post('https://restocks.net/nl/account/listings/edit', headers=headers, data=data)
         if '"success":true' in r.text:
-            print("Price updated.")
-            send_notification(name, product_id, img, price, new_price)
+            # Calculate payouts
+            payout_percentage = 0.05 if MODE == "consignment" else 0.1
+            old_payout = price - 20 - price * payout_percentage
+            new_payout = new_price - 20 - new_price * payout_percentage
+
+            notify(name, product_id, img, price, new_price, old_payout, new_payout, "Restocks", MODES[int(option) - 1])
 
 
 def get_lowest_price(base_id, size_id, product_id):
@@ -98,45 +103,5 @@ def get_lowest_price(base_id, size_id, product_id):
         'https://restocks.net/nl/product/get-lowest-price/' + str(base_id) + '/' + str(size_id) + '/' + str(product_id))
     # Return the lowest price as an integer
     return int(r.text)
-
-
-def send_notification(name, product_id, img, price, new_price):
-    embed = Embed(
-        color=0x6a00ff,
-        description=None,
-        timestamp='now'
-    )
-
-    embed.set_title(title='PRICE UPDATED ✅')
-    embed.add_field(name='Product Name', value=name)
-    embed.add_field(name='Listing ID 🏷️', value=product_id, inline=False)
-    embed.add_field(name='Price 💵', value=f'€{price} -> €{new_price}')
-
-    payout_percentage = 0.05 if MODE == "consignment" else 0.1
-    old_payout = price - 20 - price * payout_percentage
-    new_payout = new_price - 20 - new_price * payout_percentage
-    embed.add_field(name='Payout 💶', value=f'€{old_payout:.2f} -> **€{new_payout:.2f}**')
-
-    embed.set_footer(text='Listing Assistant')
-    embed.set_thumbnail(img)
-    hook = Webhook(WEBHOOK)
-    hook.send(embed=embed)
-
-
-while True:
-    modes = ['MARKETPRICE', 'UNDERCUT', "CUSTOM PRICE", 'QUIT']
-    mode_input = ''
-    input_message = ""
-    for index, item in enumerate(modes):
-        input_message += f'{index + 1}) {item}\n'
-    input_message += 'Option: '
-    while mode_input not in map(str, range(1, len(modes) + 1)):
-        mode_input = input(input_message)
-
-    if mode_input == "4":
-        quit()
-
-    print(f'Starting {modes[int(mode_input) - 1]} mode')
-    change_price(int(mode_input))
 
 
