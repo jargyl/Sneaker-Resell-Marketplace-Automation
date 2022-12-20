@@ -15,11 +15,13 @@ def price_update_success(name, listing_id, img, current_price, new_price, curren
     )
 
     embed.set_title(title='PRICE UPDATED ✅')
-    embed.add_field(name='Product Name', value=name)
-    embed.add_field(name='Listing ID 🏷️', value=listing_id, inline=False)
+    embed.add_field(name='Site', value=f"`{site}`")
+    embed.add_field(name='Mode', value=f"`{mode}`")
+    embed.add_field(name='Product Name', value=name, inline=False)
+    embed.add_field(name='Listing ID 🏷️', value=listing_id)
     embed.add_field(name='Price 💵', value=f'€{current_price} -> €{new_price}')
     embed.add_field(name='Payout 💶', value=f'€{float(current_payout):.2f} -> **€{float(new_payout):.2f}**')
-    embed.set_footer(text=f"{site} - {mode}")
+    embed.set_footer(text="Listing Assistant - jargyl#5943")
     embed.set_thumbnail(img)
 
     hook = Webhook(WEBHOOK)
@@ -36,11 +38,13 @@ def price_update_skip(name, listing_id, img, current_price, current_payout, site
     )
 
     embed.set_title(title='SKIPPED ITEM ⏭')
-    embed.add_field(name='Product Name', value=name)
-    embed.add_field(name='Listing ID 🏷️', value=listing_id, inline=False)
+    embed.add_field(name='Site', value=f"`{site}`")
+    embed.add_field(name='Mode', value=f"`{mode}`")
+    embed.add_field(name='Product Name', value=name, inline=False)
+    embed.add_field(name='Listing ID 🏷️', value=listing_id)
     embed.add_field(name='Price 💵', value=f'€{current_price}')
     embed.add_field(name='Payout 💶', value=f'€{float(current_payout):.2f}')
-    embed.set_footer(text=f"{site} - {mode}")
+    embed.set_footer(text="Listing Assistant - jargyl#5943")
     embed.set_thumbnail(img)
 
     hook = Webhook(WEBHOOK)

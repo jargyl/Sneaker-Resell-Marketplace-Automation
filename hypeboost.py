@@ -70,8 +70,6 @@ def change_price(option, exceptions):
         name = product.find('span').text
         name = name.strip()
 
-        print(product_id)
-        print(exceptions)
         if any(product_id in s for s in exceptions):
             price_update_skip(name, product_id, img, price, payout, "Hypeboost", MODES[int(option) - 1])
             continue
