@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from notification import notify
+from notify import price_update_success, price_update_skip
 
 MODES = ['Marketprice', 'Undercut', 'Custom price']
 
@@ -52,7 +52,7 @@ else:
     quit()
 
 
-def change_price(option):
+def change_price(option, exceptions):
     listings_page = session.get("https://hypeboost.com/nl/account/verkopen/huidige/niet-de-laagste-prijs",
                                 cookies=login_cookies)
     soup = BeautifulSoup(listings_page.text, "html.parser")
@@ -68,6 +68,13 @@ def change_price(option):
         payout = product.find('span', {"class": "payout"}).text
         payout = payout.replace('€ ', '').replace(',', '.')
         name = product.find('span').text
+        name = name.strip()
+
+        print(product_id)
+        print(exceptions)
+        if any(product_id in s for s in exceptions):
+            price_update_skip(name, product_id, img, price, payout, "Hypeboost", MODES[int(option) - 1])
+            continue
 
         option_values = {
             1: lowest_ask,
@@ -96,6 +103,6 @@ def change_price(option):
             r_save = session.post(f"https://hypeboost.com/nl/account/verkopen/huidige/{product_id}/opslaan",
                                   cookies=login_cookies, data=save_data)
             if '"success":true' in r_save.text:
-                notify(name, product_id, img, price, new_price, payout, new_payout, "Hypeboost", MODES[int(option) - 1])
+                price_update_success(name, product_id, img, price, new_price, payout, new_payout, "Hypeboost", MODES[int(option) - 1])
 
 

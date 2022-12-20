@@ -1,4 +1,16 @@
+import csv
+
 SITELIST = ['Hypeboost', "Restocks"]
+
+
+def get_items_from_csv(path):
+    item_list = []
+    with open(path) as csvfile:
+        csv_reader = csv.reader(csvfile)
+        for row in csv_reader:
+            item_list.append(row[0].strip())
+    item_list.pop(0)
+    return item_list
 
 
 def choose_action(actions):
@@ -22,13 +34,14 @@ while site_input not in map(str, range(1, len(SITELIST) + 1)):
 
 site = SITELIST[int(site_input) - 1]
 modes = []
+exceptions = get_items_from_csv('exceptions.csv')
 if 'Restocks' in site:
     import restocks
     while True:
         mode = choose_action(restocks.MODES)
-        restocks.change_price(int(mode))
+        restocks.change_price(int(mode), exceptions)
 if 'Hypeboost' in site:
     import hypeboost
     while True:
         mode = choose_action(hypeboost.MODES)
-        hypeboost.change_price(int(mode))
+        hypeboost.change_price(int(mode), exceptions)
